@@ -14,17 +14,33 @@ export function getSearchData(platform: Platform): SearchData {
 }
 
 export function extractProfiles(platform: Platform): UserProfileSummary[] {
-  return getSearchData(platform).accounts.map((item) => item.account.user_profile);
+  return getSearchData(platform).accounts
+    .map((item) => item.account.user_profile)
+    .filter(
+      (p): p is UserProfileSummary =>
+        Boolean(p && typeof p.username === "string" && p.username.trim().length > 0)
+    );
 }
 
-/** Look up a creator across every platform's search data. Case-insensitive
- *  and defensive against malformed entries in the seed JSON. */
+/** Look up a creator across platform search data. Case-insensitive; prefers
+ *  the platform from the URL when the same handle exists on multiple networks. */
 export function findProfileInSearch(
-  username: string
+  username: string,
+  preferredPlatform?: Platform
 ): { profile: UserProfileSummary; platform: Platform } | null {
   if (!username) return null;
   const needle = username.toLowerCase();
-  for (const platform of ["instagram", "youtube", "tiktok"] as Platform[]) {
+
+  const platforms: Platform[] = preferredPlatform
+    ? [
+        preferredPlatform,
+        ...(["instagram", "youtube", "tiktok"] as Platform[]).filter(
+          (p) => p !== preferredPlatform
+        ),
+      ]
+    : ["instagram", "youtube", "tiktok"];
+
+  for (const platform of platforms) {
     const profile = extractProfiles(platform).find(
       (p) => p && typeof p.username === "string" && p.username.toLowerCase() === needle
     );

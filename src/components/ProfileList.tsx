@@ -28,7 +28,7 @@ export function ProfileList({
         animate="visible"
       >
         {Array.from({ length: 8 }).map((_, i) => (
-          <motion.div key={i} variants={gridItem}>
+          <motion.div key={i} variants={gridItem} initial="hidden" animate="visible">
             <ProfileCardSkeleton />
           </motion.div>
         ))}

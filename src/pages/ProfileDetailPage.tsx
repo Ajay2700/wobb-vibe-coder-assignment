@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Eye,
   Heart,
-  Info,
   MessageCircle,
   Share2,
   Bookmark as BookmarkIcon,
@@ -27,44 +26,14 @@ import { AddToListButton } from "@/components/AddToListButton";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatCompact, formatEngagementRate } from "@/utils/formatters";
-import { loadProfileByUsername } from "@/utils/profileLoader";
-import { findProfileInSearch, getPlatformLabel } from "@/utils/dataHelpers";
-import { fadeUp, fadeUpStagger, gridContainer, gridItem, springSoft } from "@/lib/motionPresets";
+import { getPlatformLabel } from "@/utils/dataHelpers";
+import { resolveProfile, type ResolvedProfile } from "@/utils/profileResolver";
+import { gridContainer, gridItem, springSoft } from "@/lib/motionPresets";
 
 type Status = "loading" | "ready" | "error";
-type Depth = "full" | "summary";
-
-interface ResolvedProfile {
-  user: FullUserProfile;
-  platform: Platform;
-  depth: Depth;
-}
 
 function isPlatform(v: string | null): v is Platform {
   return v === "instagram" || v === "youtube" || v === "tiktok";
-}
-
-async function resolveProfile(
-  username: string,
-  hintedPlatform: Platform
-): Promise<ResolvedProfile | null> {
-  const full = await loadProfileByUsername(username);
-  if (full?.data.user_profile) {
-    return {
-      user: full.data.user_profile,
-      platform: hintedPlatform,
-      depth: "full",
-    };
-  }
-  const summary = findProfileInSearch(username);
-  if (summary) {
-    return {
-      user: summary.profile as FullUserProfile,
-      platform: summary.platform,
-      depth: "summary",
-    };
-  }
-  return null;
 }
 
 export function ProfileDetailPage() {
@@ -77,24 +46,32 @@ export function ProfileDetailPage() {
 
   const [snapshot, setSnapshot] = useState<{
     username: string;
+    platform: Platform;
     status: Status;
     resolved: ResolvedProfile | null;
-  }>({ username, status: "loading", resolved: null });
+  }>({ username, platform: hintedPlatform, status: "loading", resolved: null });
 
   useEffect(() => {
     let cancelled = false;
+
     resolveProfile(username, hintedPlatform)
       .then((resolved) => {
         if (cancelled) return;
         setSnapshot({
           username,
+          platform: hintedPlatform,
           status: resolved ? "ready" : "error",
           resolved,
         });
       })
       .catch(() => {
         if (!cancelled) {
-          setSnapshot({ username, status: "error", resolved: null });
+          setSnapshot({
+            username,
+            platform: hintedPlatform,
+            status: "error",
+            resolved: null,
+          });
         }
       });
     return () => {
@@ -102,7 +79,8 @@ export function ProfileDetailPage() {
     };
   }, [username, hintedPlatform]);
 
-  const isStale = snapshot.username !== username;
+  const isStale =
+    snapshot.username !== username || snapshot.platform !== hintedPlatform;
   const status: Status = isStale ? "loading" : snapshot.status;
   const resolved: ResolvedProfile | null = isStale ? null : snapshot.resolved;
 
@@ -171,16 +149,15 @@ export function ProfileDetailPage() {
               </Link>
             </motion.div>
           )}
-        </AnimatePresence>
 
-        {status === "ready" && user && (
-          <motion.article
-            variants={fadeUpStagger}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.header
-              variants={fadeUp}
+          {status === "ready" && user && (
+            <motion.article
+              key="ready"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            >
+            <header
               className="relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-6 sm:p-8"
             >
               <motion.div
@@ -255,30 +232,7 @@ export function ProfileDetailPage() {
                   </div>
                 </div>
               </div>
-            </motion.header>
-
-            {resolved!.depth === "summary" && (
-              <motion.div
-                variants={fadeUp}
-                role="note"
-                className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"
-              >
-                <Info
-                  className="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
-                  aria-hidden
-                />
-                <div className="text-sm">
-                  <p className="font-medium text-[rgb(var(--text))]">
-                    Preview data only
-                  </p>
-                  <p className="mt-0.5 text-[rgb(var(--text-muted))]">
-                    Extended metrics (avg. likes, views, growth history) aren't
-                    available for this creator yet. What you see below is
-                    sourced from the search index.
-                  </p>
-                </div>
-              </motion.div>
-            )}
+            </header>
 
             <motion.section
               className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
@@ -290,6 +244,8 @@ export function ProfileDetailPage() {
                 <motion.div
                   key={s.label}
                   variants={gridItem}
+                  initial="hidden"
+                  animate="visible"
                   whileHover={{ y: -2 }}
                   transition={springSoft}
                   className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-4"
@@ -314,7 +270,8 @@ export function ProfileDetailPage() {
               <FollowerTrend history={user.stat_history} />
             )}
           </motion.article>
-        )}
+          )}
+        </AnimatePresence>
       </div>
     </Layout>
   );

@@ -1,11 +1,12 @@
 export function RouteFallback() {
   return (
     <div
-      className="fixed inset-x-0 top-0 z-50 h-0.5 overflow-hidden bg-transparent"
-      role="progressbar"
+      className="flex min-h-[50vh] flex-col items-center justify-center gap-3"
+      role="status"
       aria-label="Loading page"
     >
-      <div className="h-full w-1/3 animate-[shimmer_1.2s_linear_infinite] bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
+      <div className="h-9 w-9 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      <p className="text-sm text-[rgb(var(--text-muted))]">Loading…</p>
     </div>
   );
 }
