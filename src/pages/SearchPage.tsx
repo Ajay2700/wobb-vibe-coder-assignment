@@ -11,7 +11,7 @@ import { FilterPanel } from "@/components/FilterPanel";
 import { ProfileList } from "@/components/ProfileList";
 import { Badge } from "@/components/ui/Badge";
 import { extractProfiles, filterProfiles, sortProfiles } from "@/utils/dataHelpers";
-import { formatCompact } from "@/utils/formatters";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { fadeUp, fadeUpStagger } from "@/lib/motionPresets";
 
 function isPlatform(v: string | null): v is Platform {
@@ -159,19 +159,19 @@ export function SearchPage() {
               <div>
                 <dt className="uppercase tracking-wider text-[rgb(var(--text-subtle))]">Creators</dt>
                 <dd className="text-lg font-semibold tabular-nums text-[rgb(var(--text))]">
-                  {AGGREGATE.total}
+                  <AnimatedNumber value={AGGREGATE.total} delay={0.15} />
                 </dd>
               </div>
               <div>
                 <dt className="uppercase tracking-wider text-[rgb(var(--text-subtle))]">Verified</dt>
                 <dd className="text-lg font-semibold tabular-nums text-[rgb(var(--text))]">
-                  {AGGREGATE.verified}
+                  <AnimatedNumber value={AGGREGATE.verified} delay={0.2} />
                 </dd>
               </div>
               <div>
                 <dt className="uppercase tracking-wider text-[rgb(var(--text-subtle))]">Combined reach</dt>
                 <dd className="text-lg font-semibold tabular-nums text-[rgb(var(--text))]">
-                  {formatCompact(AGGREGATE.totalReach)}
+                  <AnimatedNumber value={AGGREGATE.totalReach} format="compact" delay={0.25} duration={1.6} />
                 </dd>
               </div>
             </motion.dl>

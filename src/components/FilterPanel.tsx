@@ -1,4 +1,6 @@
+import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import { springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 interface FilterPanelProps {
@@ -24,10 +26,13 @@ export function FilterPanel({
 }: FilterPanelProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
+      <motion.button
         type="button"
         onClick={() => onVerifiedChange(!verifiedOnly)}
         aria-pressed={verifiedOnly}
+        whileHover={{ y: -1 }}
+        whileTap={{ scale: 0.97 }}
+        transition={springSnappy}
         className={cn(
           "inline-flex h-11 items-center gap-2 rounded-xl border px-3 text-sm font-medium transition-colors",
           verifiedOnly
@@ -35,12 +40,18 @@ export function FilterPanel({
             : "border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
         )}
       >
-        <CheckCircle2 className="h-4 w-4" aria-hidden />
+        <motion.span
+          animate={{ rotate: verifiedOnly ? 0 : -20, scale: verifiedOnly ? 1 : 0.9 }}
+          transition={springSnappy}
+          className="inline-flex"
+        >
+          <CheckCircle2 className="h-4 w-4" aria-hidden />
+        </motion.span>
         Verified only
-      </button>
+      </motion.button>
 
       <div
-        className="inline-flex h-11 items-center gap-1 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-1"
+        className="relative inline-flex h-11 items-center gap-0.5 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-1"
         role="radiogroup"
         aria-label="Minimum followers"
       >
@@ -54,13 +65,21 @@ export function FilterPanel({
               aria-checked={active}
               onClick={() => onMinFollowersChange(b.value)}
               className={cn(
-                "inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-medium tabular-nums transition-colors",
+                "relative inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-medium tabular-nums transition-colors",
                 active
-                  ? "bg-[rgb(var(--surface))] text-[rgb(var(--text))] shadow-sm ring-1 ring-[rgb(var(--border-strong))]"
+                  ? "text-[rgb(var(--text))]"
                   : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
               )}
             >
-              {b.label}
+              {active && (
+                <motion.span
+                  layoutId="filter-followers-pill"
+                  transition={springSnappy}
+                  className="absolute inset-0 rounded-lg bg-[rgb(var(--surface))] shadow-sm ring-1 ring-[rgb(var(--border-strong))]"
+                  aria-hidden
+                />
+              )}
+              <span className="relative">{b.label}</span>
             </button>
           );
         })}

@@ -16,6 +16,7 @@ import type { Platform, ShortlistItem } from "@/types";
 import { useShortlistStore } from "@/store/shortlistStore";
 import { Layout } from "@/components/layout/Layout";
 import { Avatar } from "@/components/ui/Avatar";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -193,21 +194,24 @@ export function ShortlistPage() {
             >
               <StatCard
                 label="Creators"
-                value={String(summary.total)}
                 icon={<Users className="h-4 w-4" aria-hidden />}
-              />
+              >
+                <AnimatedNumber value={summary.total} duration={0.6} />
+              </StatCard>
               <StatCard
                 label="Combined reach"
-                value={formatCompact(summary.followers)}
                 icon={<Users className="h-4 w-4" aria-hidden />}
                 hint="Sum of followers"
-              />
+              >
+                <AnimatedNumber value={summary.followers} format="compact" duration={1.2} />
+              </StatCard>
               <StatCard
                 label="Avg. engagement"
-                value={formatEngagementRate(summary.avgRate)}
                 icon={<Bookmark className="h-4 w-4" aria-hidden />}
                 hint="Across shortlisted"
-              />
+              >
+                {formatEngagementRate(summary.avgRate)}
+              </StatCard>
             </motion.section>
 
             <Reorder.Group
@@ -318,18 +322,20 @@ export function ShortlistPage() {
 
 function StatCard({
   label,
-  value,
   hint,
   icon,
+  children,
 }: {
   label: string;
-  value: string;
   hint?: string;
   icon: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <motion.div
       variants={fadeUp}
+      whileHover={{ y: -2 }}
+      transition={springSnappy}
       className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-4"
     >
       <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[rgb(var(--text-subtle))]">
@@ -337,7 +343,7 @@ function StatCard({
         {label}
       </div>
       <div className="mt-1 text-2xl font-semibold tabular-nums text-[rgb(var(--text))]">
-        {value}
+        {children}
       </div>
       {hint && <div className="text-xs text-[rgb(var(--text-subtle))]">{hint}</div>}
     </motion.div>

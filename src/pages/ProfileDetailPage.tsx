@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ExternalLink,
@@ -28,6 +29,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { formatCompact, formatEngagementRate } from "@/utils/formatters";
 import { loadProfileByUsername } from "@/utils/profileLoader";
 import { findProfileInSearch, getPlatformLabel } from "@/utils/dataHelpers";
+import { fadeUp, fadeUpStagger, gridContainer, gridItem, springSoft } from "@/lib/motionPresets";
 
 type Status = "loading" | "ready" | "error";
 type Depth = "full" | "summary";
@@ -125,46 +127,86 @@ export function ProfileDetailPage() {
           Back to search
         </Link>
 
-        {status === "loading" && <ProfileDetailSkeleton />}
-
-        {status === "error" && (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center">
-            <div className="text-4xl" aria-hidden>
-              🫥
-            </div>
-            <h1 className="mt-3 text-xl font-semibold text-[rgb(var(--text))]">
-              We couldn't find @{username}
-            </h1>
-            <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">
-              The creator may not be indexed yet, or the URL is misspelled.
-            </p>
-            <Link
-              to="/"
-              className="mt-4 inline-flex text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
+        <AnimatePresence mode="wait">
+          {status === "loading" && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              Back to discovery
-            </Link>
-          </div>
-        )}
+              <ProfileDetailSkeleton />
+            </motion.div>
+          )}
+
+          {status === "error" && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center"
+            >
+              <motion.div
+                className="text-4xl"
+                aria-hidden
+                animate={{ rotate: [0, -8, 8, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                🫥
+              </motion.div>
+              <h1 className="mt-3 text-xl font-semibold text-[rgb(var(--text))]">
+                We couldn't find @{username}
+              </h1>
+              <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">
+                The creator may not be indexed yet, or the URL is misspelled.
+              </p>
+              <Link
+                to="/"
+                className="mt-4 inline-flex text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
+              >
+                Back to discovery
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {status === "ready" && user && (
-          <article className="animate-fade-in">
-            <header className="relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-6 sm:p-8">
-              <div
+          <motion.article
+            variants={fadeUpStagger}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.header
+              variants={fadeUp}
+              className="relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-6 sm:p-8"
+            >
+              <motion.div
                 aria-hidden
-                className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[120%] -translate-x-1/2 opacity-30 blur-3xl"
+                className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[120%] -translate-x-1/2 blur-3xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.3 }}
+                transition={{ duration: 0.9, delay: 0.15 }}
                 style={{
                   background:
                     "radial-gradient(closest-side, rgb(var(--accent) / 0.5), transparent 70%)",
                 }}
               />
               <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
-                <Avatar
-                  src={user.picture}
-                  alt={user.fullname}
-                  size={112}
-                  className="ring-4 ring-[rgb(var(--surface))]"
-                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ ...springSoft, delay: 0.05 }}
+                >
+                  <Avatar
+                    src={user.picture}
+                    alt={user.fullname}
+                    size={112}
+                    className="ring-4 ring-[rgb(var(--surface))]"
+                  />
+                </motion.div>
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tone="brand">{getPlatformLabel(platform)}</Badge>
@@ -197,23 +239,27 @@ export function ProfileDetailPage() {
                       variant="full"
                     />
                     {user.url && (
-                      <a
+                      <motion.a
                         href={user.url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        whileHover={{ y: -1 }}
+                        whileTap={{ scale: 0.97 }}
+                        transition={springSoft}
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] px-5 text-sm font-medium text-[rgb(var(--text))] transition-colors hover:bg-[rgb(var(--surface-muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                       >
                         <ExternalLink className="h-4 w-4" aria-hidden />
                         View on {getPlatformLabel(platform)}
-                      </a>
+                      </motion.a>
                     )}
                   </div>
                 </div>
               </div>
-            </header>
+            </motion.header>
 
             {resolved!.depth === "summary" && (
-              <div
+              <motion.div
+                variants={fadeUp}
                 role="note"
                 className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"
               >
@@ -231,13 +277,21 @@ export function ProfileDetailPage() {
                     sourced from the search index.
                   </p>
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <motion.section
+              className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+              variants={gridContainer}
+              initial="hidden"
+              animate="visible"
+            >
               {stats.map((s) => (
-                <div
+                <motion.div
                   key={s.label}
+                  variants={gridItem}
+                  whileHover={{ y: -2 }}
+                  transition={springSoft}
                   className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-4"
                 >
                   <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[rgb(var(--text-subtle))]">
@@ -252,14 +306,14 @@ export function ProfileDetailPage() {
                       {s.hint}
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
-            </section>
+            </motion.section>
 
             {user.stat_history && user.stat_history.length > 1 && (
               <FollowerTrend history={user.stat_history} />
             )}
-          </article>
+          </motion.article>
         )}
       </div>
     </Layout>
@@ -372,7 +426,12 @@ function FollowerTrend({
   const growth = ((last - first) / first) * 100;
 
   return (
-    <section className="mt-6 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-5">
+    <motion.section
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...springSoft, delay: 0.25 }}
+      className="mt-6 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-5"
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold text-[rgb(var(--text))]">
           Follower trend
@@ -399,17 +458,46 @@ function FollowerTrend({
             <stop offset="100%" stopColor="rgb(139 61 255 / 0)" />
           </linearGradient>
         </defs>
-        <path d={areaPath} fill="url(#wobb-grad)" />
-        <path
+        <motion.path
+          d={areaPath}
+          fill="url(#wobb-grad)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
+        />
+        <motion.path
           d={linePath}
           fill="none"
           stroke="rgb(139 61 255)"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
         />
+        {points.map((p, i) => {
+          const x = padX + i * step;
+          const y = h - padY - ((p.followers - min) / span) * (h - padY * 2);
+          return (
+            <motion.circle
+              key={p.month}
+              cx={x}
+              cy={y}
+              r={3}
+              fill="rgb(139 61 255)"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.3,
+                delay: 0.4 + (1.2 * i) / points.length,
+                ease: "easeOut",
+              }}
+            />
+          );
+        })}
       </svg>
-    </section>
+    </motion.section>
   );
 }
 
