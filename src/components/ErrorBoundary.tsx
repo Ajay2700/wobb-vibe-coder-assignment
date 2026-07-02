@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { fadeUp, fadeUpStagger, springSoft } from "@/lib/motionPresets";
 
 interface Props {
   children: ReactNode;
@@ -7,6 +9,41 @@ interface Props {
 
 interface State {
   error: Error | null;
+}
+
+function ErrorFallback({ error, onReset }: { error: Error; onReset: () => void }) {
+  return (
+    <motion.div
+      className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center"
+      variants={fadeUpStagger}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5, rotate: -12 }}
+        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        transition={springSoft}
+        className="text-6xl"
+      >
+        <motion.span
+          animate={{ rotate: [0, -8, 8, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          className="inline-block"
+        >
+          💥
+        </motion.span>
+      </motion.div>
+      <motion.h1 variants={fadeUp} className="text-2xl font-semibold text-[rgb(var(--text))]">
+        Something went wrong.
+      </motion.h1>
+      <motion.p variants={fadeUp} className="text-sm text-[rgb(var(--text-muted))]">
+        {error.message}
+      </motion.p>
+      <motion.div variants={fadeUp}>
+        <Button onClick={onReset}>Try again</Button>
+      </motion.div>
+    </motion.div>
+  );
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -24,18 +61,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
-      return (
-        <div className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center gap-4 text-center">
-          <div className="text-6xl">💥</div>
-          <h1 className="text-2xl font-semibold text-[rgb(var(--text))]">
-            Something went wrong.
-          </h1>
-          <p className="text-sm text-[rgb(var(--text-muted))]">
-            {this.state.error.message}
-          </p>
-          <Button onClick={this.reset}>Try again</Button>
-        </div>
-      );
+      return <ErrorFallback error={this.state.error} onReset={this.reset} />;
     }
     return this.props.children;
   }

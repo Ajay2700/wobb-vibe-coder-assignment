@@ -28,7 +28,7 @@ import {
 } from "@/utils/formatters";
 import { getPlatformLabel } from "@/utils/dataHelpers";
 import { downloadCsv, shortlistToCsv } from "@/utils/csv";
-import { springSnappy, fadeUp, fadeUpStagger } from "@/lib/motionPresets";
+import { springSnappy, fadeUp, fadeUpStagger, listRow } from "@/lib/motionPresets";
 
 const PLATFORM_TONE: Record<Platform, "brand" | "neutral"> = {
   instagram: "brand",
@@ -112,13 +112,15 @@ export function ShortlistPage() {
   return (
     <Layout>
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link
-          to="/"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back to search
-        </Link>
+        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <Link
+            to="/"
+            className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            Back to search
+          </Link>
+        </motion.div>
 
         <motion.header
           className="flex flex-wrap items-end justify-between gap-4"
@@ -226,10 +228,10 @@ export function ShortlistPage() {
                   <Reorder.Item
                     key={item.user_id}
                     value={item}
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                    transition={springSnappy}
+                    variants={listRow}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
                     whileDrag={{
                       scale: 1.02,
                       boxShadow:

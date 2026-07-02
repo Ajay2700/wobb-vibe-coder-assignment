@@ -12,7 +12,7 @@ import { ProfileList } from "@/components/ProfileList";
 import { Badge } from "@/components/ui/Badge";
 import { extractProfiles, filterProfiles, sortProfiles } from "@/utils/dataHelpers";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
-import { fadeUp, fadeUpStagger } from "@/lib/motionPresets";
+import { fadeUp, fadeUpStagger, filterSlide, springSnappy } from "@/lib/motionPresets";
 
 function isPlatform(v: string | null): v is Platform {
   return v === "instagram" || v === "youtube" || v === "tiktok";
@@ -179,9 +179,12 @@ export function SearchPage() {
         </motion.div>
       </section>
 
-      <section
+      <motion.section
         className="sticky top-16 z-20 border-b border-[rgb(var(--border))] bg-[rgb(var(--surface))]/85 backdrop-blur"
         aria-label="Filters"
+        variants={filterSlide}
+        initial="hidden"
+        animate="visible"
       >
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -216,20 +219,30 @@ export function SearchPage() {
             )}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <section
+      <motion.section
         id={`panel-${platform}`}
         role="tabpanel"
         aria-labelledby={`tab-${platform}`}
         className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
+        key={platform}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springSnappy}
       >
         <div className="mb-4 flex items-baseline justify-between">
           <p className="text-sm text-[rgb(var(--text-muted))]">
             Showing{" "}
-            <span className="font-semibold tabular-nums text-[rgb(var(--text))]">
+            <motion.span
+              key={`${platform}-${sorted.length}`}
+              initial={{ opacity: 0, y: 4, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={springSnappy}
+              className="inline-block font-semibold tabular-nums text-[rgb(var(--text))]"
+            >
               {sorted.length}
-            </span>{" "}
+            </motion.span>{" "}
             of{" "}
             <span className="tabular-nums">{allProfiles.length}</span>{" "}
             {platform} creators
@@ -241,7 +254,7 @@ export function SearchPage() {
           platform={platform}
           onClearFilters={clearFilters}
         />
-      </section>
+      </motion.section>
     </Layout>
   );
 }

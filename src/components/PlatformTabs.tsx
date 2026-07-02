@@ -28,7 +28,7 @@ export function PlatformTabs({ selected, onChange, counts }: PlatformTabsProps) 
         const { label, Icon } = META[p];
         const active = p === selected;
         return (
-          <button
+          <motion.button
             key={p}
             type="button"
             role="tab"
@@ -36,6 +36,8 @@ export function PlatformTabs({ selected, onChange, counts }: PlatformTabsProps) 
             aria-controls={`panel-${p}`}
             id={`tab-${p}`}
             onClick={() => onChange(p)}
+            whileTap={{ scale: 0.96 }}
+            transition={springSnappy}
             className={cn(
               "relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
@@ -68,7 +70,7 @@ export function PlatformTabs({ selected, onChange, counts }: PlatformTabsProps) 
                 </span>
               )}
             </span>
-          </button>
+          </motion.button>
         );
       })}
     </div>

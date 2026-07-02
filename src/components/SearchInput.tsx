@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Search, X } from "lucide-react";
+import { springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 interface SearchInputProps {
@@ -50,16 +52,25 @@ export function SearchInput({
         className="h-11 w-full rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] pl-9 pr-24 text-sm text-[rgb(var(--text))] placeholder:text-[rgb(var(--text-subtle))] transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
       />
       <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-        {value && (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            aria-label="Clear search"
-            className="rounded-md p-1 text-[rgb(var(--text-subtle))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-          >
-            <X className="h-4 w-4" aria-hidden />
-          </button>
-        )}
+        <AnimatePresence initial={false}>
+          {value && (
+            <motion.button
+              key="clear"
+              type="button"
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={springSnappy}
+              onClick={() => onChange("")}
+              aria-label="Clear search"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="rounded-md p-1 text-[rgb(var(--text-subtle))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </motion.button>
+          )}
+        </AnimatePresence>
         <kbd className="hidden select-none rounded-md border border-[rgb(var(--border))] bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 font-mono text-[10px] text-[rgb(var(--text-subtle))] sm:inline">
           ⌘K
         </kbd>

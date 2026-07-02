@@ -1,5 +1,7 @@
+import { motion } from "framer-motion";
 import { ArrowUpDown } from "lucide-react";
 import type { SortKey } from "@/types";
+import { filterSlide } from "@/lib/motionPresets";
 
 const OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "relevance", label: "Relevance" },
@@ -16,7 +18,12 @@ interface SortSelectProps {
 
 export function SortSelect({ value, onChange }: SortSelectProps) {
   return (
-    <label className="relative inline-flex h-11 items-center gap-2 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] pl-3 pr-2 text-sm text-[rgb(var(--text))] focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
+    <motion.label
+      variants={filterSlide}
+      initial="hidden"
+      animate="visible"
+      className="relative inline-flex h-11 items-center gap-2 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] pl-3 pr-2 text-sm text-[rgb(var(--text))] focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20"
+    >
       <ArrowUpDown className="h-4 w-4 text-[rgb(var(--text-subtle))]" aria-hidden />
       <span className="sr-only">Sort by</span>
       <select
@@ -39,6 +46,6 @@ export function SortSelect({ value, onChange }: SortSelectProps) {
       >
         <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 011.08 1.04l-4.24 4.53a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" />
       </svg>
-    </label>
+    </motion.label>
   );
 }

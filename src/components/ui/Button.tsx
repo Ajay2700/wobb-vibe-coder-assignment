@@ -1,10 +1,16 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { motion } from "framer-motion";
+import { springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type Size = "sm" | "md" | "lg" | "icon";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps
+  extends Omit<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    "onDrag" | "onDragStart" | "onDragEnd" | "onAnimationStart" | "onAnimationEnd" | "onAnimationIteration"
+  > {
   variant?: Variant;
   size?: Size;
   leftIcon?: ReactNode;
@@ -13,7 +19,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-150 " +
+  "inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-colors duration-150 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 " +
   "focus-visible:ring-brand-500 focus-visible:ring-offset-[rgb(var(--surface))] " +
   "disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap select-none";
@@ -52,11 +58,16 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   },
   ref
 ) {
+  const inactive = disabled || isLoading;
+
   return (
-    <button
+    <motion.button
       ref={ref}
       className={cn(base, variants[variant], sizes[size], className)}
-      disabled={disabled || isLoading}
+      disabled={inactive}
+      whileHover={inactive ? undefined : { y: -1 }}
+      whileTap={inactive ? undefined : { scale: 0.97 }}
+      transition={springSnappy}
       {...rest}
     >
       {isLoading && (
@@ -68,6 +79,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {!isLoading && leftIcon}
       {children}
       {!isLoading && rightIcon}
-    </button>
+    </motion.button>
   );
 });

@@ -4,7 +4,7 @@ import { Bookmark, BookmarkCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import type { Platform, UserProfileSummary } from "@/types";
 import { useShortlistStore } from "@/store/shortlistStore";
-import { springSnappy } from "@/lib/motionPresets";
+import { springSnappy, bookmarkToggle } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 interface AddToListButtonProps {
@@ -66,9 +66,9 @@ function AddToListButtonImpl({
       >
         <motion.span
           key={added ? "on" : "off"}
-          initial={{ scale: 0.6, rotate: added ? -12 : 12 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={springSnappy}
+          variants={bookmarkToggle}
+          initial="off"
+          animate={added ? "on" : "off"}
           className="inline-flex"
         >
           <Icon className="h-4 w-4" aria-hidden />
@@ -96,9 +96,9 @@ function AddToListButtonImpl({
     >
       <motion.span
         key={added ? "on" : "off"}
-        initial={{ scale: 0.6, rotate: added ? -12 : 12 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={springSnappy}
+        variants={bookmarkToggle}
+        initial="off"
+        animate={added ? "on" : "off"}
         className="inline-flex"
       >
         <Icon className="h-4 w-4" aria-hidden />

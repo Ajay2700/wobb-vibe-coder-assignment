@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 interface AvatarProps {
@@ -11,6 +13,7 @@ interface AvatarProps {
 /** Circular avatar with graceful fallback (initials on gradient) if the image fails. */
 export function Avatar({ src, alt, size = 48, className }: AvatarProps) {
   const [errored, setErrored] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const initials = getInitials(alt);
 
   return (
@@ -23,22 +26,32 @@ export function Avatar({ src, alt, size = 48, className }: AvatarProps) {
       aria-label={alt}
     >
       {!errored && src && (
-        <img
+        <motion.img
           src={src}
           alt={alt}
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setErrored(true)}
+          onLoad={() => setLoaded(true)}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={loaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+          transition={springSnappy}
           className="h-full w-full object-cover"
           width={size}
           height={size}
         />
       )}
       {(errored || !src) && (
-        <span className="font-semibold" style={{ fontSize: size * 0.4 }}>
+        <motion.span
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={springSnappy}
+          className="font-semibold"
+          style={{ fontSize: size * 0.4 }}
+        >
           {initials}
-        </span>
+        </motion.span>
       )}
     </div>
   );

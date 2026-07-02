@@ -21,11 +21,18 @@ export function ProfileList({
 }: ProfileListProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <motion.div
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        variants={gridContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {Array.from({ length: 8 }).map((_, i) => (
-          <ProfileCardSkeleton key={i} />
+          <motion.div key={i} variants={gridItem}>
+            <ProfileCardSkeleton />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     );
   }
 
@@ -66,6 +73,8 @@ export function ProfileList({
             key={profile.user_id}
             layout
             variants={gridItem}
+            initial="hidden"
+            animate="visible"
             exit={{ opacity: 0, y: -8, transition: { duration: 0.2 } }}
           >
             <ProfileCard

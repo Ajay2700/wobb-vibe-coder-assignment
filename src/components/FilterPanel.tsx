@@ -58,12 +58,15 @@ export function FilterPanel({
         {FOLLOWER_BUCKETS.map((b) => {
           const active = b.value === minFollowers;
           return (
-            <button
+            <motion.button
               key={b.value}
               type="button"
               role="radio"
               aria-checked={active}
               onClick={() => onMinFollowersChange(b.value)}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.95 }}
+              transition={springSnappy}
               className={cn(
                 "relative inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-medium tabular-nums transition-colors",
                 active
@@ -80,7 +83,7 @@ export function FilterPanel({
                 />
               )}
               <span className="relative">{b.label}</span>
-            </button>
+            </motion.button>
           );
         })}
       </div>

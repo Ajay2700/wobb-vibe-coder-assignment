@@ -74,10 +74,12 @@ export const listRow: Variants = {
   },
 };
 
-/** Badge pop for count changes. */
+/** Badge enter/exit + pulse on count change. */
 export const badgePop: Variants = {
-  initial: { scale: 1 },
-  pop: {
+  hidden: { scale: 0.6, opacity: 0 },
+  visible: { scale: 1, opacity: 1, transition: springSnappy },
+  exit: { scale: 0.6, opacity: 0, transition: { duration: 0.15 } },
+  pulse: {
     scale: [1, 1.25, 1],
     transition: { duration: 0.4, times: [0, 0.5, 1], ease: "easeOut" },
   },
@@ -86,5 +88,21 @@ export const badgePop: Variants = {
 /** Toggle bookmark spring. */
 export const bookmarkToggle: Variants = {
   off: { scale: 1, rotate: 0 },
-  on: { scale: [1, 1.2, 1], rotate: [0, -8, 0], transition: springSnappy },
+  on: {
+    scale: [1, 1.2, 1],
+    rotate: [0, -8, 0],
+    transition: springSnappy,
+  },
+};
+
+/** Scale-in for icons and small elements. */
+export const scaleIn: Variants = {
+  hidden: { opacity: 0, scale: 0.85 },
+  visible: { opacity: 1, scale: 1, transition: springSnappy },
+};
+
+/** Filter bar slide-in from top. */
+export const filterSlide: Variants = {
+  hidden: { opacity: 0, y: -10 },
+  visible: { opacity: 1, y: 0, transition: easeOut },
 };

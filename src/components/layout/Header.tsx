@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Sparkles } from "lucide-react";
 import { useShortlistCount } from "@/store/shortlistStore";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { springSnappy } from "@/lib/motionPresets";
+import { badgePop, springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 export function Header() {
@@ -81,14 +81,14 @@ function HeaderLink({
             />
           )}
           <span className="relative flex items-center gap-1.5">{children}</span>
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {badge !== undefined && badge > 0 && (
               <motion.span
                 key={badge}
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.6, opacity: 0 }}
-                transition={springSnappy}
+                variants={badgePop}
+                initial="hidden"
+                animate={["visible", "pulse"]}
+                exit="exit"
                 className="relative inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-[10px] font-semibold text-white"
                 aria-label={`${badge} shortlisted`}
               >
