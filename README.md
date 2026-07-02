@@ -12,6 +12,25 @@ Vibe Coder Intern take-home.
 
 ---
 
+## Screenshots
+
+### Search & discovery
+Browse and filter creators across Instagram, YouTube, and TikTok.
+
+![Search page — creator grid with platform tabs, filters and sort](docs/screenshots/search.png)
+
+### Profile detail
+KPI tiles, engagement metrics, and a 12-month follower trend chart.
+
+![Profile detail page — Cristiano Ronaldo with stats and follower trend](docs/screenshots/profile-detail.png)
+
+### Shortlist
+Reorder shortlisted creators, export CSV, or share with your team.
+
+![Shortlist page — saved creators with combined reach summary](docs/screenshots/shortlist.png)
+
+---
+
 ## Quick start
 
 ```bash
