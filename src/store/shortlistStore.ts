@@ -9,6 +9,7 @@ interface ShortlistState {
   toggle: (profile: UserProfileSummary, platform: Platform) => { added: boolean };
   clear: () => void;
   reorder: (from: number, to: number) => void;
+  setItems: (items: ShortlistItem[]) => void;
   setNote: (user_id: string, note: string) => void;
   has: (user_id: string) => boolean;
 }
@@ -65,6 +66,8 @@ export const useShortlistStore = create<ShortlistState>()(
         items.splice(to, 0, moved);
         set({ items });
       },
+
+      setItems: (items) => set({ items }),
 
       setNote: (user_id, note) => {
         set({

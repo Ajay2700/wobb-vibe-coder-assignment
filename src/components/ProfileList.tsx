@@ -1,5 +1,7 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { SearchX } from "lucide-react";
 import type { Platform, UserProfileSummary } from "@/types";
+import { gridContainer, gridItem } from "@/lib/motionPresets";
 import { ProfileCard } from "./ProfileCard";
 import { EmptyState } from "./ui/EmptyState";
 import { ProfileCardSkeleton } from "./ui/Skeleton";
@@ -11,7 +13,12 @@ interface ProfileListProps {
   onClearFilters?: () => void;
 }
 
-export function ProfileList({ profiles, platform, isLoading, onClearFilters }: ProfileListProps) {
+export function ProfileList({
+  profiles,
+  platform,
+  isLoading,
+  onClearFilters,
+}: ProfileListProps) {
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -44,20 +51,32 @@ export function ProfileList({ profiles, platform, isLoading, onClearFilters }: P
   }
 
   return (
-    <div
+    <motion.div
       role="list"
-      className="grid animate-fade-in gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      variants={gridContainer}
+      initial="hidden"
+      animate="visible"
+      key={`${platform}-${profiles.length}`}
     >
-      {profiles.map((profile, index) => (
-        <div role="listitem" key={profile.user_id}>
-          <ProfileCard
-            profile={profile}
-            platform={platform}
-            rank={index + 1}
-            trending={index === 0}
-          />
-        </div>
-      ))}
-    </div>
+      <AnimatePresence mode="popLayout">
+        {profiles.map((profile, index) => (
+          <motion.div
+            role="listitem"
+            key={profile.user_id}
+            layout
+            variants={gridItem}
+            exit={{ opacity: 0, y: -8, transition: { duration: 0.2 } }}
+          >
+            <ProfileCard
+              profile={profile}
+              platform={platform}
+              rank={index + 1}
+              trending={index === 0}
+            />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </motion.div>
   );
 }

@@ -1,6 +1,8 @@
+import { motion } from "framer-motion";
 import { Instagram, Youtube, Music2 } from "lucide-react";
 import type { Platform } from "@/types";
 import { PLATFORMS } from "@/types";
+import { springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 interface PlatformTabsProps {
@@ -38,22 +40,34 @@ export function PlatformTabs({ selected, onChange, counts }: PlatformTabsProps) 
               "relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
               active
-                ? "bg-[rgb(var(--surface))] text-[rgb(var(--text))] shadow-sm ring-1 ring-[rgb(var(--border-strong))]"
+                ? "text-[rgb(var(--text))]"
                 : "text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
             )}
           >
-            <Icon className="h-4 w-4" aria-hidden />
-            <span>{label}</span>
-            {counts && counts[p] !== undefined && (
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
-                  active ? "bg-brand-500/10 text-brand-600 dark:text-brand-300" : "text-[rgb(var(--text-subtle))]"
-                )}
-              >
-                {counts[p]}
-              </span>
+            {active && (
+              <motion.span
+                layoutId="platform-tab-pill"
+                className="absolute inset-0 rounded-lg bg-[rgb(var(--surface))] shadow-sm ring-1 ring-[rgb(var(--border-strong))]"
+                transition={springSnappy}
+                aria-hidden
+              />
             )}
+            <span className="relative flex items-center gap-2">
+              <Icon className="h-4 w-4" aria-hidden />
+              <span>{label}</span>
+              {counts && counts[p] !== undefined && (
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
+                    active
+                      ? "bg-brand-500/10 text-brand-600 dark:text-brand-300"
+                      : "text-[rgb(var(--text-subtle))]"
+                  )}
+                >
+                  {counts[p]}
+                </span>
+              )}
+            </span>
           </button>
         );
       })}

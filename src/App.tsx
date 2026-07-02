@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import { Toaster } from "react-hot-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useThemeEffect } from "@/store/themeStore";
@@ -22,23 +23,26 @@ function App() {
   useThemeEffect();
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route path="/" element={<SearchPage />} />
-            <Route path="/profile/:username" element={<ProfileDetailPage />} />
-            <Route path="/shortlist" element={<ShortlistPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          duration: 2500,
-          className: "!bg-[rgb(var(--surface-elev))] !text-[rgb(var(--text))] !border !border-[rgb(var(--border))]",
-        }}
-      />
+      <MotionConfig reducedMotion="user">
+        <BrowserRouter>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<SearchPage />} />
+              <Route path="/profile/:username" element={<ProfileDetailPage />} />
+              <Route path="/shortlist" element={<ShortlistPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            duration: 2500,
+            className:
+              "!bg-[rgb(var(--surface-elev))] !text-[rgb(var(--text))] !border !border-[rgb(var(--border))]",
+          }}
+        />
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

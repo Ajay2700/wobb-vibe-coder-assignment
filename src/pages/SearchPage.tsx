@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import type { Platform, SortKey } from "@/types";
 import { Layout } from "@/components/layout/Layout";
@@ -11,6 +12,7 @@ import { ProfileList } from "@/components/ProfileList";
 import { Badge } from "@/components/ui/Badge";
 import { extractProfiles, filterProfiles, sortProfiles } from "@/utils/dataHelpers";
 import { formatCompact } from "@/utils/formatters";
+import { fadeUp, fadeUpStagger } from "@/lib/motionPresets";
 
 function isPlatform(v: string | null): v is Platform {
   return v === "instagram" || v === "youtube" || v === "tiktok";
@@ -120,24 +122,40 @@ export function SearchPage() {
               "radial-gradient(60% 60% at 20% 0%, rgb(var(--accent) / 0.18) 0%, transparent 60%), radial-gradient(50% 50% at 80% 0%, rgb(var(--accent) / 0.10) 0%, transparent 60%)",
           }}
         />
-        <div className="mx-auto max-w-7xl px-4 pb-6 pt-10 sm:px-6 sm:pt-14 lg:px-8">
+        <motion.div
+          className="mx-auto max-w-7xl px-4 pb-6 pt-10 sm:px-6 sm:pt-14 lg:px-8"
+          variants={fadeUpStagger}
+          initial="hidden"
+          animate="visible"
+        >
           <div className="flex flex-col items-start gap-4">
-            <Badge tone="brand" className="rounded-full">
-              <Sparkles className="h-3 w-3" aria-hidden />
-              Creator discovery
-            </Badge>
-            <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-[rgb(var(--text))] sm:text-4xl lg:text-5xl">
+            <motion.div variants={fadeUp}>
+              <Badge tone="brand" className="rounded-full">
+                <Sparkles className="h-3 w-3" aria-hidden />
+                Creator discovery
+              </Badge>
+            </motion.div>
+            <motion.h1
+              variants={fadeUp}
+              className="max-w-3xl text-3xl font-bold tracking-tight text-[rgb(var(--text))] sm:text-4xl lg:text-5xl"
+            >
               Find the perfect creators for your next{" "}
               <span className="bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent">
                 campaign
               </span>
               .
-            </h1>
-            <p className="max-w-2xl text-sm text-[rgb(var(--text-muted))] sm:text-base">
+            </motion.h1>
+            <motion.p
+              variants={fadeUp}
+              className="max-w-2xl text-sm text-[rgb(var(--text-muted))] sm:text-base"
+            >
               Browse top influencers across Instagram, YouTube and TikTok. Filter, sort
               and build a shortlist you can revisit and export.
-            </p>
-            <dl className="mt-2 flex flex-wrap items-baseline gap-x-6 gap-y-2 text-xs">
+            </motion.p>
+            <motion.dl
+              variants={fadeUp}
+              className="mt-2 flex flex-wrap items-baseline gap-x-6 gap-y-2 text-xs"
+            >
               <div>
                 <dt className="uppercase tracking-wider text-[rgb(var(--text-subtle))]">Creators</dt>
                 <dd className="text-lg font-semibold tabular-nums text-[rgb(var(--text))]">
@@ -156,9 +174,9 @@ export function SearchPage() {
                   {formatCompact(AGGREGATE.totalReach)}
                 </dd>
               </div>
-            </dl>
+            </motion.dl>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       <section

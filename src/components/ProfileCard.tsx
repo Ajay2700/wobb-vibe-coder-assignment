@@ -1,8 +1,10 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ChevronRight, Flame, TrendingUp, Users } from "lucide-react";
 import type { Platform, UserProfileSummary } from "@/types";
 import { formatCompact, formatEngagementRate } from "@/utils/formatters";
+import { springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 import { VerifiedBadge } from "./VerifiedBadge";
 import { Avatar } from "./ui/Avatar";
@@ -19,13 +21,16 @@ function ProfileCardImpl({ profile, platform, rank, trending }: ProfileCardProps
   const to = `/profile/${encodeURIComponent(profile.username)}?platform=${platform}`;
 
   return (
-    <article
+    <motion.article
+      whileHover={{ y: -4, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      transition={springSnappy}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border bg-[rgb(var(--surface-elev))]",
-        "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-500/5",
+        "shadow-sm shadow-transparent transition-colors duration-200 hover:shadow-lg hover:shadow-brand-500/10",
         "focus-within:shadow-lg",
         trending
-          ? "border-brand-500/40 shadow-brand-500/5 shadow-md"
+          ? "border-brand-500/40"
           : "border-[rgb(var(--border))] hover:border-brand-500/30 focus-within:border-brand-500/30"
       )}
     >
@@ -108,7 +113,7 @@ function ProfileCardImpl({ profile, platform, rank, trending }: ProfileCardProps
       <div className="absolute right-3 top-3 z-10">
         <AddToListButton profile={profile} platform={platform} />
       </div>
-    </article>
+    </motion.article>
   );
 }
 

@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { AnimatePresence, Reorder, motion } from "framer-motion";
 import {
   Bookmark,
   Download,
@@ -19,10 +20,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { formatCompact, formatEngagementRate, formatRelativeTime } from "@/utils/formatters";
+import {
+  formatCompact,
+  formatEngagementRate,
+  formatRelativeTime,
+} from "@/utils/formatters";
 import { getPlatformLabel } from "@/utils/dataHelpers";
 import { downloadCsv, shortlistToCsv } from "@/utils/csv";
-import { cn } from "@/utils/cn";
+import { springSnappy, fadeUp, fadeUpStagger } from "@/lib/motionPresets";
 
 const PLATFORM_TONE: Record<Platform, "brand" | "neutral"> = {
   instagram: "brand",
@@ -35,49 +40,19 @@ export function ShortlistPage() {
   const remove = useShortlistStore((s) => s.remove);
   const clear = useShortlistStore((s) => s.clear);
   const reorder = useShortlistStore((s) => s.reorder);
-
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const setItems = useShortlistStore((s) => s.setItems);
 
   const summary = useMemo(() => {
     const total = items.length;
     const followers = items.reduce((sum, i) => sum + (i.followers || 0), 0);
-    const rateValues = items.map((i) => i.engagement_rate).filter((r): r is number => r !== undefined);
+    const rateValues = items
+      .map((i) => i.engagement_rate)
+      .filter((r): r is number => r !== undefined);
     const avgRate = rateValues.length
       ? rateValues.reduce((a, b) => a + b, 0) / rateValues.length
       : undefined;
-    const byPlatform = items.reduce<Record<string, number>>((acc, i) => {
-      acc[i.platform] = (acc[i.platform] ?? 0) + 1;
-      return acc;
-    }, {});
-    return { total, followers, avgRate, byPlatform };
+    return { total, followers, avgRate };
   }, [items]);
-
-  const onDragStart = (index: number) => (e: React.DragEvent<HTMLLIElement>) => {
-    setDragIndex(index);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(index));
-  };
-
-  const onDragOver = (index: number) => (e: React.DragEvent<HTMLLIElement>) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverIndex(index);
-  };
-
-  const onDrop = (index: number) => (e: React.DragEvent<HTMLLIElement>) => {
-    e.preventDefault();
-    const from = dragIndex ?? Number(e.dataTransfer.getData("text/plain"));
-    setDragIndex(null);
-    setDragOverIndex(null);
-    if (Number.isNaN(from) || from === index) return;
-    reorder(from, index);
-  };
-
-  const onDragEnd = () => {
-    setDragIndex(null);
-    setDragOverIndex(null);
-  };
 
   const onKeyReorder = useCallback(
     (index: number) => (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -97,13 +72,20 @@ export function ShortlistPage() {
     const csv = shortlistToCsv(items);
     const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     downloadCsv(`wobb-shortlist-${stamp}.csv`, csv);
-    toast.success(`Exported ${items.length} creator${items.length === 1 ? "" : "s"} to CSV`);
+    toast.success(
+      `Exported ${items.length} creator${items.length === 1 ? "" : "s"} to CSV`
+    );
   };
 
   const onShare = async () => {
     if (!items.length) return;
     const summaryText = items
-      .map((i) => `@${i.username} (${getPlatformLabel(i.platform)}) — ${formatCompact(i.followers)}`)
+      .map(
+        (i) =>
+          `@${i.username} (${getPlatformLabel(i.platform)}) — ${formatCompact(
+            i.followers
+          )}`
+      )
       .join("\n");
     const text = `My Wobb shortlist (${items.length}):\n\n${summaryText}`;
     try {
@@ -137,8 +119,13 @@ export function ShortlistPage() {
           Back to search
         </Link>
 
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+        <motion.header
+          className="flex flex-wrap items-end justify-between gap-4"
+          variants={fadeUpStagger}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={fadeUp}>
             <div className="flex items-center gap-2">
               <Badge tone="brand">
                 <Bookmark className="h-3 w-3" aria-hidden />
@@ -151,22 +138,34 @@ export function ShortlistPage() {
             <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">
               Drag to reorder, export as CSV or share with your team. Stored locally in your browser.
             </p>
-          </div>
+          </motion.div>
 
           {items.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={onShare} leftIcon={<Share2 className="h-4 w-4" aria-hidden />}>
+            <motion.div className="flex flex-wrap gap-2" variants={fadeUp}>
+              <Button
+                variant="secondary"
+                onClick={onShare}
+                leftIcon={<Share2 className="h-4 w-4" aria-hidden />}
+              >
                 Share
               </Button>
-              <Button variant="secondary" onClick={onExport} leftIcon={<Download className="h-4 w-4" aria-hidden />}>
+              <Button
+                variant="secondary"
+                onClick={onExport}
+                leftIcon={<Download className="h-4 w-4" aria-hidden />}
+              >
                 Export CSV
               </Button>
-              <Button variant="danger" onClick={onClearAll} leftIcon={<Trash2 className="h-4 w-4" aria-hidden />}>
+              <Button
+                variant="danger"
+                onClick={onClearAll}
+                leftIcon={<Trash2 className="h-4 w-4" aria-hidden />}
+              >
                 Clear
               </Button>
-            </div>
+            </motion.div>
           )}
-        </header>
+        </motion.header>
 
         {items.length === 0 ? (
           <div className="mt-10">
@@ -186,102 +185,130 @@ export function ShortlistPage() {
           </div>
         ) : (
           <>
-            <section className="mt-6 grid gap-3 sm:grid-cols-3">
-              <StatCard label="Creators" value={String(summary.total)} icon={<Users className="h-4 w-4" aria-hidden />} />
-              <StatCard label="Combined reach" value={formatCompact(summary.followers)} icon={<Users className="h-4 w-4" aria-hidden />} hint="Sum of followers" />
+            <motion.section
+              className="mt-6 grid gap-3 sm:grid-cols-3"
+              variants={fadeUpStagger}
+              initial="hidden"
+              animate="visible"
+            >
+              <StatCard
+                label="Creators"
+                value={String(summary.total)}
+                icon={<Users className="h-4 w-4" aria-hidden />}
+              />
+              <StatCard
+                label="Combined reach"
+                value={formatCompact(summary.followers)}
+                icon={<Users className="h-4 w-4" aria-hidden />}
+                hint="Sum of followers"
+              />
               <StatCard
                 label="Avg. engagement"
                 value={formatEngagementRate(summary.avgRate)}
                 icon={<Bookmark className="h-4 w-4" aria-hidden />}
                 hint="Across shortlisted"
               />
-            </section>
+            </motion.section>
 
-            <ul className="mt-6 space-y-2" role="list" aria-label="Shortlisted creators">
-              {items.map((item, index) => (
-                <li
-                  key={item.user_id}
-                  draggable
-                  onDragStart={onDragStart(index)}
-                  onDragOver={onDragOver(index)}
-                  onDrop={onDrop(index)}
-                  onDragEnd={onDragEnd}
-                  className={cn(
-                    "group relative flex items-center gap-3 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-3 transition-all",
-                    dragIndex === index && "opacity-40",
-                    dragOverIndex === index && dragIndex !== index && "border-brand-500/40 ring-2 ring-brand-500/20"
-                  )}
-                >
-                  <button
-                    type="button"
-                    aria-label={`Reorder ${item.fullname || item.username}. Use arrow keys.`}
-                    onKeyDown={onKeyReorder(index)}
-                    className="inline-flex h-9 w-6 shrink-0 cursor-grab items-center justify-center rounded-md text-[rgb(var(--text-subtle))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] active:cursor-grabbing"
+            <Reorder.Group
+              axis="y"
+              values={items}
+              onReorder={setItems}
+              className="mt-6 space-y-2"
+              aria-label="Shortlisted creators"
+            >
+              <AnimatePresence initial={false}>
+                {items.map((item, index) => (
+                  <Reorder.Item
+                    key={item.user_id}
+                    value={item}
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                    transition={springSnappy}
+                    whileDrag={{
+                      scale: 1.02,
+                      boxShadow:
+                        "0 20px 40px -20px rgba(139, 61, 255, 0.4), 0 10px 20px -10px rgba(0,0,0,0.15)",
+                      cursor: "grabbing",
+                    }}
+                    className="group relative flex items-center gap-3 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-3 shadow-sm"
                   >
-                    <GripVertical className="h-4 w-4" aria-hidden />
-                  </button>
-
-                  <span className="w-6 shrink-0 text-center font-mono text-xs tabular-nums text-[rgb(var(--text-subtle))]">
-                    {index + 1}
-                  </span>
-
-                  <Link
-                    to={`/profile/${encodeURIComponent(item.username)}?platform=${item.platform}`}
-                    className="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-1 -m-1 hover:bg-[rgb(var(--surface-muted))]"
-                  >
-                    <Avatar src={item.picture} alt={item.fullname} size={44} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-center gap-1">
-                        <span className="truncate font-semibold text-[rgb(var(--text))]">
-                          {item.fullname || `@${item.username}`}
-                        </span>
-                        <VerifiedBadge verified={item.is_verified} />
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[rgb(var(--text-muted))]">
-                        <span>@{item.username}</span>
-                        <span aria-hidden>·</span>
-                        <Badge tone={PLATFORM_TONE[item.platform]} className="rounded-md">
-                          {getPlatformLabel(item.platform)}
-                        </Badge>
-                        <span className="hidden text-[rgb(var(--text-subtle))] sm:inline">
-                          Added {formatRelativeTime(item.addedAt)}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-
-                  <div className="hidden shrink-0 items-center gap-6 sm:flex">
-                    <StatCell label="Followers" value={formatCompact(item.followers)} />
-                    <StatCell label="ER" value={formatEngagementRate(item.engagement_rate)} />
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-1">
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Open @${item.username} on ${getPlatformLabel(item.platform)}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[rgb(var(--text-subtle))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-                      >
-                        <ExternalLink className="h-4 w-4" aria-hidden />
-                      </a>
-                    )}
                     <button
                       type="button"
-                      onClick={() => {
-                        remove(item.user_id);
-                        toast(`Removed @${item.username}`, { icon: "🗑️", id: `rm-${item.user_id}` });
-                      }}
-                      aria-label={`Remove @${item.username} from shortlist`}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[rgb(var(--text-subtle))] hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+                      aria-label={`Reorder ${item.fullname || item.username}. Use arrow keys.`}
+                      onKeyDown={onKeyReorder(index)}
+                      className="inline-flex h-9 w-6 shrink-0 cursor-grab items-center justify-center rounded-md text-[rgb(var(--text-subtle))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] active:cursor-grabbing"
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden />
+                      <GripVertical className="h-4 w-4" aria-hidden />
                     </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+
+                    <span className="w-6 shrink-0 text-center font-mono text-xs tabular-nums text-[rgb(var(--text-subtle))]">
+                      {index + 1}
+                    </span>
+
+                    <Link
+                      to={`/profile/${encodeURIComponent(item.username)}?platform=${item.platform}`}
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-1 -m-1 hover:bg-[rgb(var(--surface-muted))]"
+                    >
+                      <Avatar src={item.picture} alt={item.fullname} size={44} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-1">
+                          <span className="truncate font-semibold text-[rgb(var(--text))]">
+                            {item.fullname || `@${item.username}`}
+                          </span>
+                          <VerifiedBadge verified={item.is_verified} />
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[rgb(var(--text-muted))]">
+                          <span>@{item.username}</span>
+                          <span aria-hidden>·</span>
+                          <Badge tone={PLATFORM_TONE[item.platform]} className="rounded-md">
+                            {getPlatformLabel(item.platform)}
+                          </Badge>
+                          <span className="hidden text-[rgb(var(--text-subtle))] sm:inline">
+                            Added {formatRelativeTime(item.addedAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+
+                    <div className="hidden shrink-0 items-center gap-6 sm:flex">
+                      <StatCell label="Followers" value={formatCompact(item.followers)} />
+                      <StatCell label="ER" value={formatEngagementRate(item.engagement_rate)} />
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-1">
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Open @${item.username} on ${getPlatformLabel(item.platform)}`}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[rgb(var(--text-subtle))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+                        >
+                          <ExternalLink className="h-4 w-4" aria-hidden />
+                        </a>
+                      )}
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                          remove(item.user_id);
+                          toast(`Removed @${item.username}`, {
+                            icon: "🗑️",
+                            id: `rm-${item.user_id}`,
+                          });
+                        }}
+                        aria-label={`Remove @${item.username} from shortlist`}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[rgb(var(--text-subtle))] hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </motion.button>
+                    </div>
+                  </Reorder.Item>
+                ))}
+              </AnimatePresence>
+            </Reorder.Group>
           </>
         )}
       </div>
@@ -301,25 +328,33 @@ function StatCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-4">
+    <motion.div
+      variants={fadeUp}
+      className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-4"
+    >
       <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[rgb(var(--text-subtle))]">
         {icon}
         {label}
       </div>
-      <div className="mt-1 text-2xl font-semibold tabular-nums text-[rgb(var(--text))]">{value}</div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums text-[rgb(var(--text))]">
+        {value}
+      </div>
       {hint && <div className="text-xs text-[rgb(var(--text-subtle))]">{hint}</div>}
-    </div>
+    </motion.div>
   );
 }
 
 function StatCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="text-right">
-      <div className="text-[10px] uppercase tracking-wide text-[rgb(var(--text-subtle))]">{label}</div>
-      <div className="text-sm font-semibold tabular-nums text-[rgb(var(--text))]">{value}</div>
+      <div className="text-[10px] uppercase tracking-wide text-[rgb(var(--text-subtle))]">
+        {label}
+      </div>
+      <div className="text-sm font-semibold tabular-nums text-[rgb(var(--text))]">
+        {value}
+      </div>
     </div>
   );
 }
 
-// Kept for reference in exports; type used from module scope.
 export type { ShortlistItem };

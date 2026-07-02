@@ -1,8 +1,10 @@
 import { memo, type MouseEvent } from "react";
+import { motion } from "framer-motion";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import type { Platform, UserProfileSummary } from "@/types";
 import { useShortlistStore } from "@/store/shortlistStore";
+import { springSnappy } from "@/lib/motionPresets";
 import { cn } from "@/utils/cn";
 
 interface AddToListButtonProps {
@@ -18,7 +20,9 @@ function AddToListButtonImpl({
   variant = "compact",
   className,
 }: AddToListButtonProps) {
-  const added = useShortlistStore((s) => s.items.some((it) => it.user_id === profile.user_id));
+  const added = useShortlistStore((s) =>
+    s.items.some((it) => it.user_id === profile.user_id)
+  );
   const toggle = useShortlistStore((s) => s.toggle);
 
   const onClick = (e: MouseEvent<HTMLButtonElement>) => {
@@ -26,9 +30,14 @@ function AddToListButtonImpl({
     e.preventDefault();
     const result = toggle(profile, platform);
     if (result.added) {
-      toast.success(`Added @${profile.username} to shortlist`, { id: `add-${profile.user_id}` });
+      toast.success(`Added @${profile.username} to shortlist`, {
+        id: `add-${profile.user_id}`,
+      });
     } else {
-      toast(`Removed @${profile.username}`, { id: `rm-${profile.user_id}`, icon: "🗑️" });
+      toast(`Removed @${profile.username}`, {
+        id: `rm-${profile.user_id}`,
+        icon: "🗑️",
+      });
     }
   };
 
@@ -37,14 +46,17 @@ function AddToListButtonImpl({
 
   if (variant === "compact") {
     return (
-      <button
+      <motion.button
         type="button"
         onClick={onClick}
         aria-label={label}
         aria-pressed={added}
         title={label}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.92 }}
+        transition={springSnappy}
         className={cn(
-          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-150",
+          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
           added
             ? "bg-brand-500 text-white shadow-sm hover:brightness-110"
@@ -52,18 +64,29 @@ function AddToListButtonImpl({
           className
         )}
       >
-        <Icon className={cn("h-4 w-4", added && "animate-pop")} aria-hidden />
-      </button>
+        <motion.span
+          key={added ? "on" : "off"}
+          initial={{ scale: 0.6, rotate: added ? -12 : 12 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={springSnappy}
+          className="inline-flex"
+        >
+          <Icon className="h-4 w-4" aria-hidden />
+        </motion.span>
+      </motion.button>
     );
   }
 
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
       aria-pressed={added}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.97 }}
+      transition={springSnappy}
       className={cn(
-        "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 font-medium transition-all",
+        "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 font-medium",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
         added
           ? "border border-brand-500/30 bg-brand-500/10 text-brand-600 dark:text-brand-300 hover:bg-brand-500/15"
@@ -71,9 +94,17 @@ function AddToListButtonImpl({
         className
       )}
     >
-      <Icon className={cn("h-4 w-4", added && "animate-pop")} aria-hidden />
+      <motion.span
+        key={added ? "on" : "off"}
+        initial={{ scale: 0.6, rotate: added ? -12 : 12 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={springSnappy}
+        className="inline-flex"
+      >
+        <Icon className="h-4 w-4" aria-hidden />
+      </motion.span>
       {added ? "In shortlist" : "Add to shortlist"}
-    </button>
+    </motion.button>
   );
 }
 
