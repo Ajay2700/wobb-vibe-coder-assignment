@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  --color-brand-50: #f6f0ff;
+  --color-brand-100: #ede0ff;
+  --color-brand-200: #d8bfff;
+  --color-brand-300: #bd91ff;
+  --color-brand-400: #a163ff;
+  --color-brand-500: #8b3dff;
+  --color-brand-600: #7524e6;
+  --color-brand-700: #5f1cbc;
+  --color-brand-800: #4c1795;
+  --color-brand-900: #3a1173;
+}
+
+:root {
+  color-scheme: light;
+  --surface: 255 255 255;
+  --surface-muted: 249 250 251;
+  --surface-elev: 255 255 255;
+  --border: 229 231 235;
+  --border-strong: 209 213 219;
+  --text: 17 24 39;
+  --text-muted: 107 114 128;
+  --text-subtle: 156 163 175;
+  --accent: 139 61 255;
+  --accent-fg: 255 255 255;
+  --ring: 139 61 255;
+  --shadow-color: 15 23 42;
+}
+
+.dark {
+  color-scheme: dark;
+  --surface: 11 11 18;
+  --surface-muted: 17 18 27;
+  --surface-elev: 22 23 34;
+  --border: 39 40 55;
+  --border-strong: 62 64 84;
+  --text: 245 245 250;
+  --text-muted: 161 165 187;
+  --text-subtle: 118 122 142;
+  --accent: 189 145 255;
+  --accent-fg: 20 12 40;
+  --ring: 189 145 255;
+  --shadow-color: 0 0 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+:where(button, [role="button"]) {
+  cursor: pointer;
+}
+
+:where(button:disabled, [role="button"][aria-disabled="true"]) {
+  cursor: not-allowed;
+}
+
+*:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: rgb(var(--accent) / 0.25);
+  color: rgb(var(--text));
+}
+
+/* Custom scrollbar (subtle) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--border-strong)) transparent;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.animate-fade-in { animation: fade-in 0.35s ease-out both; }
+.animate-pop     { animation: pop 0.35s ease-out both; }
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--surface-muted)) 0%,
+    rgb(var(--border)) 50%,
+    rgb(var(--surface-muted)) 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
