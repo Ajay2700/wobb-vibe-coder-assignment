@@ -4,6 +4,9 @@ A production-grade influencer discovery app: search, filter, sort and build a
 persistent shortlist across Instagram, YouTube and TikTok. Built for the Wobb
 Vibe Coder Intern take-home.
 
+**Live demo →** https://wobb-vibe-coder-assignment-bice.vercel.app
+**Repository →** https://github.com/Ajay2700/wobb-vibe-coder-assignment
+
 > **Stack:** React 19 · TypeScript · Vite · Tailwind CSS 4 · Zustand (with
 > `persist`) · React Router 7 · Lucide · react-hot-toast
 
