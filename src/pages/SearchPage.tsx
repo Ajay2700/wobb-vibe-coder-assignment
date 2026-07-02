@@ -10,6 +10,7 @@ import { FilterPanel } from "@/components/FilterPanel";
 import { ProfileList } from "@/components/ProfileList";
 import { Badge } from "@/components/ui/Badge";
 import { extractProfiles, filterProfiles, sortProfiles } from "@/utils/dataHelpers";
+import { formatCompact } from "@/utils/formatters";
 
 function isPlatform(v: string | null): v is Platform {
   return v === "instagram" || v === "youtube" || v === "tiktok";
@@ -33,12 +34,23 @@ const DEFAULTS = {
   min: 0,
 };
 
-/** Total counts memoized once — never recomputed per render. */
+/** Aggregate stats computed once at module load — never recomputed per render. */
 const totalByPlatform: Record<Platform, number> = {
   instagram: extractProfiles("instagram").length,
   youtube: extractProfiles("youtube").length,
   tiktok: extractProfiles("tiktok").length,
 };
+
+const AGGREGATE = (() => {
+  const all = [
+    ...extractProfiles("instagram"),
+    ...extractProfiles("youtube"),
+    ...extractProfiles("tiktok"),
+  ];
+  const verified = all.filter((p) => p.is_verified).length;
+  const totalReach = all.reduce((sum, p) => sum + (p.followers || 0), 0);
+  return { total: all.length, verified, totalReach };
+})();
 
 export function SearchPage() {
   const [params, setParams] = useSearchParams();
@@ -125,6 +137,26 @@ export function SearchPage() {
               Browse top influencers across Instagram, YouTube and TikTok. Filter, sort
               and build a shortlist you can revisit and export.
             </p>
+            <dl className="mt-2 flex flex-wrap items-baseline gap-x-6 gap-y-2 text-xs">
+              <div>
+                <dt className="uppercase tracking-wider text-[rgb(var(--text-subtle))]">Creators</dt>
+                <dd className="text-lg font-semibold tabular-nums text-[rgb(var(--text))]">
+                  {AGGREGATE.total}
+                </dd>
+              </div>
+              <div>
+                <dt className="uppercase tracking-wider text-[rgb(var(--text-subtle))]">Verified</dt>
+                <dd className="text-lg font-semibold tabular-nums text-[rgb(var(--text))]">
+                  {AGGREGATE.verified}
+                </dd>
+              </div>
+              <div>
+                <dt className="uppercase tracking-wider text-[rgb(var(--text-subtle))]">Combined reach</dt>
+                <dd className="text-lg font-semibold tabular-nums text-[rgb(var(--text))]">
+                  {formatCompact(AGGREGATE.totalReach)}
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
       </section>

@@ -50,7 +50,12 @@ export function ProfileList({ profiles, platform, isLoading, onClearFilters }: P
     >
       {profiles.map((profile, index) => (
         <div role="listitem" key={profile.user_id}>
-          <ProfileCard profile={profile} platform={platform} rank={index + 1} />
+          <ProfileCard
+            profile={profile}
+            platform={platform}
+            rank={index + 1}
+            trending={index === 0}
+          />
         </div>
       ))}
     </div>

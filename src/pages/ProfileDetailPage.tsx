@@ -5,6 +5,7 @@ import {
   ExternalLink,
   Eye,
   Heart,
+  Info,
   MessageCircle,
   Share2,
   Bookmark as BookmarkIcon,
@@ -12,7 +13,12 @@ import {
   TrendingUp,
   Hash,
 } from "lucide-react";
-import type { FullUserProfile, Platform, ProfileDetailResponse } from "@/types";
+import type {
+  FullUserProfile,
+  Platform,
+  ProfileDetailResponse,
+  UserProfileSummary,
+} from "@/types";
 import { Layout } from "@/components/layout/Layout";
 import { Avatar } from "@/components/ui/Avatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -21,60 +27,98 @@ import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatCompact, formatEngagementRate } from "@/utils/formatters";
 import { loadProfileByUsername } from "@/utils/profileLoader";
-import { getPlatformLabel } from "@/utils/dataHelpers";
-import { cn } from "@/utils/cn";
+import { findProfileInSearch, getPlatformLabel } from "@/utils/dataHelpers";
 
 type Status = "loading" | "ready" | "error";
+type Depth = "full" | "summary";
+
+interface ResolvedProfile {
+  user: FullUserProfile;
+  platform: Platform;
+  depth: Depth;
+}
 
 function isPlatform(v: string | null): v is Platform {
   return v === "instagram" || v === "youtube" || v === "tiktok";
+}
+
+async function resolveProfile(
+  username: string,
+  hintedPlatform: Platform
+): Promise<ResolvedProfile | null> {
+  const full = await loadProfileByUsername(username);
+  if (full?.data.user_profile) {
+    return {
+      user: full.data.user_profile,
+      platform: hintedPlatform,
+      depth: "full",
+    };
+  }
+  const summary = findProfileInSearch(username);
+  if (summary) {
+    return {
+      user: summary.profile as FullUserProfile,
+      platform: summary.platform,
+      depth: "summary",
+    };
+  }
+  return null;
 }
 
 export function ProfileDetailPage() {
   const { username = "" } = useParams<{ username: string }>();
   const [searchParams] = useSearchParams();
   const platformParam = searchParams.get("platform");
-  const platform: Platform = isPlatform(platformParam) ? platformParam : "instagram";
+  const hintedPlatform: Platform = isPlatform(platformParam)
+    ? platformParam
+    : "instagram";
 
   const [snapshot, setSnapshot] = useState<{
     username: string;
     status: Status;
-    data: ProfileDetailResponse | null;
-  }>({ username, status: "loading", data: null });
+    resolved: ResolvedProfile | null;
+  }>({ username, status: "loading", resolved: null });
 
   useEffect(() => {
     let cancelled = false;
-    loadProfileByUsername(username)
-      .then((data) => {
+    resolveProfile(username, hintedPlatform)
+      .then((resolved) => {
         if (cancelled) return;
-        setSnapshot({ username, status: data ? "ready" : "error", data });
+        setSnapshot({
+          username,
+          status: resolved ? "ready" : "error",
+          resolved,
+        });
       })
       .catch(() => {
-        if (!cancelled) setSnapshot({ username, status: "error", data: null });
+        if (!cancelled) {
+          setSnapshot({ username, status: "error", resolved: null });
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [username]);
+  }, [username, hintedPlatform]);
 
   const isStale = snapshot.username !== username;
   const status: Status = isStale ? "loading" : snapshot.status;
-  const profileData: ProfileDetailResponse | null = isStale ? null : snapshot.data;
+  const resolved: ResolvedProfile | null = isStale ? null : snapshot.resolved;
 
   useEffect(() => {
-    if (profileData?.data.user_profile) {
-      document.title = `@${profileData.data.user_profile.username} · Wobb`;
+    if (resolved?.user) {
+      document.title = `@${resolved.user.username} · Wobb`;
     }
-  }, [profileData]);
+  }, [resolved]);
 
-  const user = profileData?.data.user_profile;
+  const user = resolved?.user;
+  const platform = resolved?.platform ?? hintedPlatform;
   const stats = useMemo(() => (user ? buildStats(user) : []), [user]);
 
   return (
     <Layout>
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <Link
-          to={`/?platform=${platform}`}
+          to={`/?platform=${hintedPlatform}`}
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text))]"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
@@ -85,7 +129,9 @@ export function ProfileDetailPage() {
 
         {status === "error" && (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center">
-            <div className="text-4xl">🫥</div>
+            <div className="text-4xl" aria-hidden>
+              🫥
+            </div>
             <h1 className="mt-3 text-xl font-semibold text-[rgb(var(--text))]">
               We couldn't find @{username}
             </h1>
@@ -103,11 +149,7 @@ export function ProfileDetailPage() {
 
         {status === "ready" && user && (
           <article className="animate-fade-in">
-            <header
-              className={cn(
-                "relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-6 sm:p-8"
-              )}
-            >
+            <header className="relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-6 sm:p-8">
               <div
                 aria-hidden
                 className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[120%] -translate-x-1/2 opacity-30 blur-3xl"
@@ -127,14 +169,20 @@ export function ProfileDetailPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tone="brand">{getPlatformLabel(platform)}</Badge>
                     {user.is_business && <Badge tone="neutral">Business</Badge>}
-                    {user.language?.name && <Badge tone="neutral">{user.language.name}</Badge>}
-                    {user.age_group && <Badge tone="neutral">{user.age_group}</Badge>}
+                    {user.language?.name && (
+                      <Badge tone="neutral">{user.language.name}</Badge>
+                    )}
+                    {user.age_group && (
+                      <Badge tone="neutral">{user.age_group}</Badge>
+                    )}
                   </div>
                   <h1 className="mt-2 flex flex-wrap items-center gap-1.5 text-2xl font-bold text-[rgb(var(--text))] sm:text-3xl">
                     {user.fullname || `@${user.username}`}
                     <VerifiedBadge verified={user.is_verified} size={22} />
                   </h1>
-                  <p className="text-sm text-[rgb(var(--text-muted))]">@{user.username}</p>
+                  <p className="text-sm text-[rgb(var(--text-muted))]">
+                    @{user.username}
+                  </p>
 
                   {user.description && (
                     <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[rgb(var(--text-muted))]">
@@ -143,7 +191,11 @@ export function ProfileDetailPage() {
                   )}
 
                   <div className="mt-5 flex flex-wrap gap-2">
-                    <AddToListButton profile={user} platform={platform} variant="full" />
+                    <AddToListButton
+                      profile={user as UserProfileSummary}
+                      platform={platform}
+                      variant="full"
+                    />
                     {user.url && (
                       <a
                         href={user.url}
@@ -160,6 +212,28 @@ export function ProfileDetailPage() {
               </div>
             </header>
 
+            {resolved!.depth === "summary" && (
+              <div
+                role="note"
+                className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"
+              >
+                <Info
+                  className="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
+                  aria-hidden
+                />
+                <div className="text-sm">
+                  <p className="font-medium text-[rgb(var(--text))]">
+                    Preview data only
+                  </p>
+                  <p className="mt-0.5 text-[rgb(var(--text-muted))]">
+                    Extended metrics (avg. likes, views, growth history) aren't
+                    available for this creator yet. What you see below is
+                    sourced from the search index.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {stats.map((s) => (
                 <div
@@ -174,7 +248,9 @@ export function ProfileDetailPage() {
                     {s.value}
                   </div>
                   {s.hint && (
-                    <div className="mt-0.5 text-xs text-[rgb(var(--text-subtle))]">{s.hint}</div>
+                    <div className="mt-0.5 text-xs text-[rgb(var(--text-subtle))]">
+                      {s.hint}
+                    </div>
                   )}
                 </div>
               ))}
@@ -190,8 +266,15 @@ export function ProfileDetailPage() {
   );
 }
 
-function buildStats(user: FullUserProfile) {
-  return [
+interface Stat {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  hint?: string;
+}
+
+function buildStats(user: FullUserProfile): Stat[] {
+  const candidates: Array<Stat | null> = [
     {
       label: "Followers",
       value: formatCompact(user.followers),
@@ -201,18 +284,25 @@ function buildStats(user: FullUserProfile) {
       label: "Engagement rate",
       value: formatEngagementRate(user.engagement_rate),
       icon: <TrendingUp className="h-3.5 w-3.5" aria-hidden />,
-      hint: user.engagements !== undefined ? `${formatCompact(user.engagements)} engagements` : undefined,
+      hint:
+        user.engagements !== undefined
+          ? `${formatCompact(user.engagements)} engagements`
+          : undefined,
     },
-    {
-      label: "Avg. likes",
-      value: formatCompact(user.avg_likes),
-      icon: <Heart className="h-3.5 w-3.5" aria-hidden />,
-    },
-    {
-      label: "Avg. comments",
-      value: formatCompact(user.avg_comments),
-      icon: <MessageCircle className="h-3.5 w-3.5" aria-hidden />,
-    },
+    user.avg_likes !== undefined
+      ? {
+          label: "Avg. likes",
+          value: formatCompact(user.avg_likes),
+          icon: <Heart className="h-3.5 w-3.5" aria-hidden />,
+        }
+      : null,
+    user.avg_comments !== undefined
+      ? {
+          label: "Avg. comments",
+          value: formatCompact(user.avg_comments),
+          icon: <MessageCircle className="h-3.5 w-3.5" aria-hidden />,
+        }
+      : null,
     user.avg_views && user.avg_views > 0
       ? {
           label: "Avg. views",
@@ -241,10 +331,15 @@ function buildStats(user: FullUserProfile) {
           icon: <BookmarkIcon className="h-3.5 w-3.5" aria-hidden />,
         }
       : null,
-  ].filter((v): v is NonNullable<typeof v> => v !== null);
+  ];
+  return candidates.filter((v): v is Stat => v !== null);
 }
 
-function FollowerTrend({ history }: { history: NonNullable<FullUserProfile["stat_history"]> }) {
+function FollowerTrend({
+  history,
+}: {
+  history: NonNullable<FullUserProfile["stat_history"]>;
+}) {
   const points = history
     .filter((h) => h.followers !== undefined)
     .slice(-12) as Array<{ month: string; followers: number }>;
@@ -268,7 +363,9 @@ function FollowerTrend({ history }: { history: NonNullable<FullUserProfile["stat
     })
     .join(" ");
 
-  const areaPath = `${linePath} L${(padX + (points.length - 1) * step).toFixed(1)},${h - padY} L${padX},${h - padY} Z`;
+  const areaPath = `${linePath} L${(padX + (points.length - 1) * step).toFixed(
+    1
+  )},${h - padY} L${padX},${h - padY} Z`;
 
   const first = points[0].followers;
   const last = points[points.length - 1].followers;
@@ -277,7 +374,9 @@ function FollowerTrend({ history }: { history: NonNullable<FullUserProfile["stat
   return (
     <section className="mt-6 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-elev))] p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold text-[rgb(var(--text))]">Follower trend</h2>
+        <h2 className="text-sm font-semibold text-[rgb(var(--text))]">
+          Follower trend
+        </h2>
         <div className="flex items-baseline gap-2">
           <span className="text-xs text-[rgb(var(--text-muted))]">
             {points[0].month} → {points[points.length - 1].month}
@@ -336,3 +435,5 @@ function ProfileDetailSkeleton() {
     </div>
   );
 }
+
+export type { ProfileDetailResponse };
